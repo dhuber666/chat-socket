@@ -34,6 +34,7 @@ io.of("/chat").on("connection", socket => {
       sender: name,
       message: msg
     };
+    console.log(newChat);
     chatRooms.map(chatRoom => {
       if (chatRoom.name === room) {
         chatRoom.chats.push(newChat);
@@ -42,7 +43,7 @@ io.of("/chat").on("connection", socket => {
     console.log("new message: ", msg);
     io.of("/chat")
       .in(room)
-      .emit("message", msg);
+      .emit("message", newChat);
   });
   socket.on("joinRoom", (room, name) => {
     chatRooms.forEach(chatRoom => {
@@ -54,9 +55,13 @@ io.of("/chat").on("connection", socket => {
       } else {
         chatRoom.users.push(name.toLowerCase());
         socket.join(room);
+        const joinedMessage = {
+          sender: "System",
+          message: `${name} has joined the room`
+        };
         io.of("/chat")
           .to(room)
-          .emit("newUser", `${name} has joined the room`);
+          .emit("newUser", joinedMessage);
         return socket.emit("success", "Joined room ", room);
       }
     });

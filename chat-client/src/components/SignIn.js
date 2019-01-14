@@ -14,16 +14,29 @@ class SignIn extends React.Component {
   };
 
   componentDidMount() {
+    // fetch initial posts
+    axios
+      .get("http://localhost:3000/rooms")
+      .then(({ data }) =>
+        data.forEach(room => {
+          if (room.name === this.props.room) {
+            this.setState({ chats: room.chats });
+          }
+        })
+      )
+      .catch(e => this.setState({ error: e }));
+
     socket.on("newUser", msg => {
+      console.log("new user", msg);
       this.setState({ chats: [...this.state.chats, msg] });
     });
 
     socket.on("success", msg => {
+      console.log("success");
       this.setState({ success: msg });
     });
 
     socket.on("message", msg => {
-      console.log("message received");
       this.setState({ chats: [...this.state.chats, msg] });
     });
 
@@ -61,17 +74,14 @@ class SignIn extends React.Component {
   };
 
   renderChat = () => {
-    axios.get("http://localhost:3000/rooms").then(({ data }) =>
-      data.forEach(room => {
-        if (room.name === this.props.room) {
-          const tempChats = room.chats.map(chat => chat.message);
-          this.setState({ chats: tempChats });
-        }
-      })
-    );
     const { chats } = this.state;
+
     // TODO: Add the user's name to every chat
-    const messages = chats.map((chat, id) => <p key={id}>{chat}</p>);
+    const messages = chats.map((chat, id) => (
+      <p key={id}>
+        {chat.sender}: {chat.message}
+      </p>
+    ));
     return (
       <Fragment>
         <h4>Messages:</h4>
